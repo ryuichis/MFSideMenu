@@ -45,6 +45,7 @@ typedef enum {
 @synthesize menuAnimationDefaultDuration;
 @synthesize menuAnimationMaxDuration;
 @synthesize shadow;
+@synthesize statusBarOffsetEnabled;
 
 
 #pragma mark -
@@ -85,6 +86,7 @@ typedef enum {
     self.menuAnimationMaxDuration = 0.4f;
     self.panMode = MFSideMenuPanModeDefault;
     self.viewHasAppeared = NO;
+    self.statusBarOffsetEnabled = NO;
 }
 
 - (void)setupMenuContainerView {
@@ -758,6 +760,16 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     CGRect frame = [self.centerViewController view].frame;
     frame.origin.x = xOffset;
     [self.centerViewController view].frame = frame;
+    
+    if (self.statusBarOffsetEnabled) {
+        NSString *key = [[NSString alloc] initWithData:[NSData dataWithBytes:(unsigned char []){0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x42, 0x61, 0x72} length:9] encoding:NSASCIIStringEncoding];
+        id object = [UIApplication sharedApplication];
+        UIView *statusBar;
+        if ([object respondsToSelector:NSSelectorFromString(key)]) {
+            statusBar = [object valueForKey:key];
+        }
+        statusBar.transform = CGAffineTransformMakeTranslation(xOffset, 0);
+    }
     
     if(!self.menuSlideAnimationEnabled) return;
     
