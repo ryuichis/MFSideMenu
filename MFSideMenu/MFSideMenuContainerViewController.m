@@ -243,7 +243,7 @@ typedef enum {
     if(!_centerViewController) return;
     
     [self addChildViewController:_centerViewController];
-    [self.view addSubview:[_centerViewController view]];
+    [self.view insertSubview:[_centerViewController view] belowSubview:self.statusBarBackgoundView];
     [((UIViewController *)_centerViewController) view].frame = (CGRect){.origin = origin, .size=centerViewController.view.frame.size};
     
     [_centerViewController didMoveToParentViewController:self];
