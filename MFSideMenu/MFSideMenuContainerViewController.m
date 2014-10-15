@@ -25,6 +25,8 @@ typedef enum {
 @property (nonatomic, assign) MFSideMenuPanDirection panDirection;
 
 @property (nonatomic, assign) BOOL viewHasAppeared;
+
+@property (nonatomic, strong) UIView *statusBarBackgoundView;
 @end
 
 @implementation MFSideMenuContainerViewController
@@ -45,7 +47,8 @@ typedef enum {
 @synthesize menuAnimationDefaultDuration;
 @synthesize menuAnimationMaxDuration;
 @synthesize shadow;
-@synthesize statusBarOffsetEnabled;
+@synthesize darkenStatusBarWhenMenuOpens;
+@synthesize statusBarBackgoundView = _statusBarBackgoundView;
 
 
 #pragma mark -
@@ -86,7 +89,7 @@ typedef enum {
     self.menuAnimationMaxDuration = 0.4f;
     self.panMode = MFSideMenuPanModeDefault;
     self.viewHasAppeared = NO;
-    self.statusBarOffsetEnabled = NO;
+    self.darkenStatusBarWhenMenuOpens = NO;
 }
 
 - (void)setupMenuContainerView {
@@ -106,6 +109,15 @@ typedef enum {
     }
 }
 
+- (void)setupStatusBarBackgroundView {
+    CGRect backgroundViewFrame = self.view.bounds;
+    backgroundViewFrame.size.height = 20;
+    self.statusBarBackgoundView = [[UIView alloc] initWithFrame:backgroundViewFrame];
+    self.statusBarBackgoundView.backgroundColor = [UIColor blackColor];
+    self.statusBarBackgoundView.alpha = 0;
+    [self.view addSubview:self.statusBarBackgoundView];
+}
+
 #pragma mark -
 #pragma mark - View Lifecycle
 
@@ -121,6 +133,7 @@ typedef enum {
         [self setLeftSideMenuFrameToClosedPosition];
         [self setRightSideMenuFrameToClosedPosition];
         [self addGestureRecognizers];
+        [self setupStatusBarBackgroundView];
         [self.shadow draw];
         
         self.viewHasAppeared = YES;
@@ -761,14 +774,10 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
     frame.origin.x = xOffset;
     [self.centerViewController view].frame = frame;
     
-    if (self.statusBarOffsetEnabled) {
-        NSString *key = [[NSString alloc] initWithData:[NSData dataWithBytes:(unsigned char []){0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x42, 0x61, 0x72} length:9] encoding:NSASCIIStringEncoding];
-        id object = [UIApplication sharedApplication];
-        UIView *statusBar;
-        if ([object respondsToSelector:NSSelectorFromString(key)]) {
-            statusBar = [object valueForKey:key];
-        }
-        statusBar.transform = CGAffineTransformMakeTranslation(xOffset, 0);
+    if (darkenStatusBarWhenMenuOpens) {
+        CGFloat menuWidth = MAX(_leftMenuWidth, _rightMenuWidth);
+        CGFloat menuOpenedPerecent = ABS(xOffset) / menuWidth;
+        self.statusBarBackgoundView.alpha = menuOpenedPerecent;
     }
     
     if(!self.menuSlideAnimationEnabled) return;
